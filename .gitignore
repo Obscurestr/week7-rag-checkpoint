@@ -1,4 +1,9 @@
 .venv/
 __pycache__/
 .pytest_cache/
+.idea/
+\[Nedeljni izveštaj\] Goran Suvačarev – Nedelja 7.md
 results/*.json
+!results/before.json
+!results/after.json
+!results/advanced-coverage.json

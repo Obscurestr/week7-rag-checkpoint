@@ -5,6 +5,8 @@
 Komanda `python -m pytest` nije mogla da se pokrene dok nije instaliran
 `pytest==8.3.3` iz `requirements.txt`. Posle instalacije, testovi prolaze:
 **18 passed**.
+Ponovna provera u lokalnom Windows okruženju sa Python 3.13.7 takođe daje
+**18 passed**.
 
 Pokrenuta je početna evaluacija:
 
@@ -12,14 +14,41 @@ Pokrenuta je početna evaluacija:
 python -m src.eval_runner --out results/before.json
 ```
 
-Otisak eval skupa je:
+Za `before.json` korišćeni su `CHUNK_STRATEGY="chars"` i
+`RETRIEVAL_STRATEGY="lexical"`.
+
+Otisak prvobitnog eval skupa, sa LF krajevima redova, bio je:
 
 ```text
 afe46db1e75a0b85bb5c9a93b6763e3b96e5cd7b289e12da6d2671e4d8650064
 ```
 
+Za ponovljena merenja na Windows checkout-u `before.json`, `after.json` i
+`advanced-coverage.json` imaju isti otisak
+`3c2a2b3a09169f42b31cd9dbe0403250561a72e745642baa598300ab47a6a883`.
+Git je pri checkout-u pretvorio LF u CRLF; sadržaj pitanja i očekivanja je isti.
+
 Početni rezultat je bio 6/12 prolaznih pitanja, sa retrieval hit rate 0.7778
 i prosečnom citation precision 0.4545.
+
+Puna tabela ponovljenog početnog merenja:
+
+```text
+ID   Category                 Expected Got     Hit  Fact  CitPrec Pass
+----------------------------------------------------------------------
+E01  supported                answer   answer  yes  yes   0.50    PASS
+E02  supported                answer   answer  yes  yes   0.50    PASS
+E03  supported                answer   answer  yes  yes   0.50    PASS
+E04  chunk-boundary           answer   answer  yes  no    1.00    FAIL
+E05  paraphrase               answer   answer  no   no    0.00    FAIL
+E06  versioned                answer   answer  no   no    0.00    FAIL
+E07  supported                answer   answer  yes  yes   1.00    PASS
+E08  supported                answer   answer  yes  yes   0.50    PASS
+E09  chunk-boundary           answer   answer  yes  no    1.00    FAIL
+E10  unsupported              refuse   answer  -    -     0.00    FAIL
+E11  unsupported-near-domain  refuse   answer  -    -     0.00    FAIL
+E12  unsupported              refuse   refuse  -    -     -       PASS
+```
 
 ## Dokumentovani propusti pre izmene
 
@@ -52,6 +81,10 @@ Implementirana je jedna namerna promena: sentence-aware chunking. Funkcija
 do `CHUNK_SIZE`. Rečenica duža od limita ostaje zaseban chunk, kako ne bi bila
 presečena. Preklapanje se ne koristi za ovu strategiju.
 
+Kod je dostupan u [repozitorijumskom commitu](https://github.com/Obscurestr/week7-rag-checkpoint/commit/a0dd3b0b053caaadff78a33bc2f57dc80aff8a04).
+To je inicijalni commit koji uključuje i odvojeni napredni eksperiment;
+izolovana promena podešavanja za obavezni deo vidi se u poređenju ispod.
+
 Poređenje podešavanja potvrđuje da je promenjeno samo jedno podešavanje:
 
 ```text
@@ -67,9 +100,31 @@ python -m src.eval_runner --out results/after.json
 python -m src.eval_compare results/before.json results/after.json
 ```
 
-Oba fajla imaju isti otisak eval skupa kao početno merenje. Rezultat posle
+Za `after.json` korišćeni su `CHUNK_STRATEGY="sentences"` i
+`RETRIEVAL_STRATEGY="lexical"`.
+
+Oba ponovljena fajla imaju isti otisak eval skupa. Rezultat posle
 izmene je 9/12 prolaznih pitanja, retrieval hit rate 0.8889 i prosečna citation
 precision 0.5455.
+
+Puna tabela ponovljenog merenja posle izmene:
+
+```text
+ID   Category                 Expected Got     Hit  Fact  CitPrec Pass
+----------------------------------------------------------------------
+E01  supported                answer   answer  yes  yes   0.50    PASS
+E02  supported                answer   answer  yes  yes   0.50    PASS
+E03  supported                answer   answer  yes  yes   1.00    PASS
+E04  chunk-boundary           answer   answer  yes  yes   1.00    PASS
+E05  paraphrase               answer   answer  no   no    0.00    FAIL
+E06  versioned                answer   answer  yes  yes   0.50    PASS
+E07  supported                answer   answer  yes  yes   1.00    PASS
+E08  supported                answer   answer  yes  yes   1.00    PASS
+E09  chunk-boundary           answer   answer  yes  yes   1.00    PASS
+E10  unsupported              refuse   answer  -    -     0.00    FAIL
+E11  unsupported-near-domain  refuse   answer  -    -     0.00    FAIL
+E12  unsupported              refuse   refuse  -    -     -       PASS
+```
 
 ```text
 Fixed (fail -> pass): E04, E06, E09
@@ -103,16 +158,31 @@ Ručna CLI provera E04 takođe daje citat `hb-01-chunk-1` koji sadrži punu
 - Behaviour accuracy ostaje 0.8333 zbog ta dva pogrešna odgovora za
   nepokrivena pitanja.
 
+## Napredni deo (odvojen od obavezne promene)
+
+Posle obaveznog merenja, `RETRIEVAL_STRATEGY="coverage_filtered"` daje 12/12
+na istom eval skupu, bez regresija u odnosu na `after.json`. Taj eksperiment,
+njegova ograničenja i zasebno poređenje opisani su u
+`docs/advanced-coverage.md`; rezultat je `results/advanced-coverage.json`.
+Ovaj dodatni korak nije deo poređenja `before.json` → `after.json`.
+
 ## Pregled para
 
-_Dopuniti nakon pregleda drugog para: komentar na jednu promenu, podršku
-rezultata i eventualno izostavljene regresije ili ograničenja._
+Sara je interno pregledala zajednički rad i rekla da je u redu. Komentar
+dodeljenog **drugog para** još treba uneti ovde: da li je obavezna promena
+zaista jedna i u skladu sa specifikacijom, da li merenje podržava zaključak i
+da li je izostavljena regresija ili ograničenje.
 
 ## Doprinosi i AI beleška
 
-- Član 1: _dopuniti_.
-- Član 2: _dopuniti_.
-- Osoba koja vodi demonstraciju: _dopuniti_.
+- Sara Trnjakov i Goran Suvačarev zajedno su radili na zadatku uz AI asistenta
+  u Sarinoj sesiji: diskutovali su o rešenju, zajedno pisali promptove i
+  proveravali predloge i rezultate tokom rada.
+- Goran Suvačarev je u zasebnoj sesiji proverio kod i dokaze, ponovio tri eval
+  merenja i testove, dopunio tabele u izveštaju i proverio da razlika u
+  SHA-256 otisku potiče samo od LF/CRLF krajeva redova.
+- Osoba koja vodi demonstraciju: Sara Trnjakov.
 - AI je korišćen za čitanje koda, izbor i implementaciju sentence-aware
-  chunkovanja i nacrt izveštaja. Predlog je proveravan pokretanjem fiksnog eval
-  skupa pre i posle, alatom za poređenje, ručnim CLI pozivom i testovima.
+  chunkovanja, nacrt izveštaja i ponavljanje merenja na Windows checkout-u.
+  Predlog i obnovljene tabele provereni su pokretanjem fiksnog eval skupa pre i
+  posle, alatom za poređenje, ručnim CLI pozivom i testovima (18/18).

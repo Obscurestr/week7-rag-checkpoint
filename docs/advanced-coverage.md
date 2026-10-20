@@ -39,8 +39,12 @@ Summary:
   mean_citation_precision: 0.5455 -> 0.9444 (+0.3989)
 ```
 
-All tests pass (`18 passed`). The eval set hash is unchanged:
-`afe46db1e75a0b85bb5c9a93b6763e3b96e5cd7b289e12da6d2671e4d8650064`.
+All tests pass (`18 passed`). The original LF-based evaluation reported the
+hash `afe46db1e75a0b85bb5c9a93b6763e3b96e5cd7b289e12da6d2671e4d8650064`.
+The reproduced Windows runs (`after.json` and `advanced-coverage.json`) share
+`3c2a2b3a09169f42b31cd9dbe0403250561a72e745642baa598300ab47a6a883`.
+The original hash belongs to the committed LF version of the same eval set;
+Windows checkout converted its line endings to CRLF.
 
 ## Limitations
 

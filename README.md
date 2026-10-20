@@ -51,4 +51,4 @@ All tests pass on the starting state. Tests check mechanics, not quality; qualit
 3. Change one thing (see `docs/improvement-menu.md`), then run the same command with `--out results/after.json`.
 4. Compare with `eval_compare` and put both runs and the comparison output in your report.
 
-Result files in `results/` are ignored by git. Copy the printed tables into your report.
+The three saved evidence runs (`before.json`, `after.json`, and `advanced-coverage.json`) are tracked in `results/`; other JSON runs are ignored. Copy the printed tables into your report.
